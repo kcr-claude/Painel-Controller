@@ -1,0 +1,26 @@
+{# Macros reutilizadas pelas telas #}
+{% macro status(st) -%}
+  {% if st and st.existe %}<span class="status">Status: <b>{{ st.status }}</b> · último dia lançado {{ st.dia_lancado }} de {{ st.dias_mes }} ({{ st.pct|pct }} do mês){% if st.faltantes %} · sem arquivo: {{ st.faltantes|join(', ') }}{% endif %}</span>{% endif %}
+{%- endmacro %}
+
+{% macro sit(s) -%}
+  <span class="selo {{ 'ok' if s=='Favorável' else ('alerta' if s=='Desfavorável' else '') }}">{{ s }}</span>
+{%- endmacro %}
+
+{% macro kpi(rotulo, valor, comparacao='', classe='') -%}
+  <div class="kpi"><span class="rot">{{ rotulo }}</span><span class="val">{{ valor }}</span><span class="cmp {{ classe }}">{{ comparacao }}</span></div>
+{%- endmacro %}
+
+{% macro linha_orc(r, nome, cls='', corrente=False) -%}
+  <tr class="{{ cls }}"><td>{{ nome }}</td>
+    <td class="num">{{ r.orcado|brl }}</td>
+    {% if corrente %}<td class="num">{{ r.orc_ref|brl }}</td>{% endif %}
+    <td class="num">{{ r.realizado|brl }}</td>
+    <td class="num {{ r.dif|sinal }}">{{ r.dif|brl }}</td>
+    <td class="num {{ r.dif|sinal }}">{{ r.dif_pct|pct }}</td>
+    <td>{{ sit(r.situacao) }}</td></tr>
+{%- endmacro %}
+
+{% macro cab_orc(primeira, corrente=False) -%}
+  <thead><tr><th>{{ primeira }}</th><th class="num">Orçado do período</th>{% if corrente %}<th class="num">Orçado proporcional</th>{% endif %}<th class="num">Realizado</th><th class="num">Diferença</th><th class="num">%</th><th>Situação</th></tr></thead>
+{%- endmacro %}

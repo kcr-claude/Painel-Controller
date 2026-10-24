@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block corpo %}
+<section class="cartao">
+  <h2>Importar planilhas mensais</h2>
+  <form method="post" enctype="multipart/form-data" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+    <input id="planilhas" type="file" name="planilhas" accept=".xlsx" multiple required>
+    <button type="submit">Importar</button>
+  </form>
+  <p class="nota">Aceita os arquivos "MMM_AA I CUSTOS &amp; RECEITAS I GERAL I &lt;UNIDADE&gt;.xlsx". Reimportar um mês substitui a versão anterior. Planilhas A&amp;B são reconhecidas e ainda não integradas.</p>
+</section>
+
+{% if resultados %}
+<section class="cartao">
+  <h2>Resultado</h2>
+  <div class="rolagem"><table>
+    <thead><tr><th>Arquivo</th><th>Situação</th><th class="num">Linhas METAS</th><th class="num">Lançamentos diários</th><th class="num">Último dia</th><th class="num">Erros de fórmula</th><th>Observação</th></tr></thead>
+    <tbody>{% for r in resultados %}
+      <tr><td>{{ r.nome }}</td><td><span class="selo {{ 'cheio-ok' if r.situacao=='importado' else ('cheio-alerta' if r.situacao=='falha' else '') }}">{{ r.situacao }}</span></td>
+      <td class="num">{{ r.linhas or '–' }}</td><td class="num">{{ r.lancamentos_diarios or '–' }}</td><td class="num">{{ r.dia_lancado or '–' }}{% if r.dias_mes %}/{{ r.dias_mes }}{% endif %}</td>
+      <td class="num">{{ r.erros_formula if r.erros_formula is defined else '–' }}</td><td>{{ r.motivo or '' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<section class="cartao">
+  <h2>Arquivos na base</h2>
+  <div class="rolagem"><table>
+    <thead><tr><th>Unidade</th><th>Período</th><th>Status</th><th class="num">Último dia</th><th>Arquivo</th><th>Importado em</th></tr></thead>
+    <tbody>{% for a in arquivos %}
+      <tr><td>{{ a.unidade }}</td><td>{{ MESES_CURTO[a.mes] }}/{{ a.ano }}</td><td>{{ a.status }}</td><td class="num">{{ a.dia_lancado }}/{{ a.dias_mes }}</td><td>{{ a.nome }}</td><td>{{ a.importado_em|replace('T',' ') }}</td></tr>
+    {% else %}<tr><td colspan="6">Nenhum arquivo importado.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}

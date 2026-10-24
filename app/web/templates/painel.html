@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block status %}{{ m.status(t.status) }}{% endblock %}
+{% block corpo %}
+{% if t.vazio %}<section class="cartao">Sem arquivo para o período selecionado.</section>{% else %}
+{% set corr = t.status.status == 'Corrente' %}
+{% if corr or alertas %}
+<div class="ressalva">
+  {% if corr %}Mês corrente: valores comparados ao orçamento proporcional a {{ t.status.pct|pct }} do mês (indicativo; custos concentrados não ocorrem de forma linear). {% endif %}
+  {% if alertas %}{{ alertas|length }} checagens com alerta neste período: conclusões sujeitas a validação. <a href="/qualidade?unidade={{ f.unidade }}&ano={{ f.ano }}&mes={{ f.mes }}">Ver qualidade dos dados</a>.{% endif %}
+</div>
+{% endif %}
+
+{% set k = un.kpis %}
+<section class="kpis" aria-label="Indicadores">
+  {{ m.kpi("Receita total" ~ (" (acum.)" if f.acumulado else ""), t.receita_total.realizado|brl(0),
+           "Orçado " ~ t.receita_total.orc_ref|brl(0) ~ " · " ~ t.receita_total.dif_pct|pct, t.receita_total.dif|sinal) }}
+  {{ m.kpi("Custo operacional" ~ (" (acum.)" if f.acumulado else ""), t.custo_total.realizado|brl(0),
+           "Orçado " ~ t.custo_total.orc_ref|brl(0) ~ " · " ~ t.custo_total.dif_pct|pct, t.custo_total.dif|sinal) }}
+  {{ m.kpi("Custo por UH (mês)", un.total_uh.u_real|brl, "Orçado " ~ un.total_uh.u_orc|brl, un.total_uh.dif_unit|sinal) }}
+  {{ m.kpi("Custo por PAX total (mês)", un.total_pax.u_real|brl, "Orçado " ~ un.total_pax.u_orc|brl, un.total_pax.dif_unit|sinal) }}
+  {{ m.kpi("Ocupação", k.real.ocupacao|pct, "Orçado " ~ k.orc.ocupacao|pct, ((k.real.ocupacao or 0) - (k.orc.ocupacao or 0))|sinal) }}
+  {{ m.kpi("Diária média", k.real.diaria_media|brl, "Orçado " ~ k.orc.diaria_media|brl, ((k.real.diaria_media or 0) - (k.orc.diaria_media or 0))|sinal) }}
+  {{ m.kpi("CMV", k.real.cmv|pct, "Meta " ~ k.orc.cmv|pct, ((k.orc.cmv or 0) - (k.real.cmv or 0))|sinal) }}
+  {{ m.kpi("Custo de A&B por PAX", k.real.ab_por_pax|brl, "Orçado " ~ k.orc.ab_por_pax|brl, ((k.orc.ab_por_pax or 0) - (k.real.ab_por_pax or 0))|sinal) }}
+  {{ m.kpi("Couvert médio", k.real.couvert|brl, "Orçado " ~ k.orc.couvert|brl, ((k.real.couvert or 0) - (k.orc.couvert or 0))|sinal) }}
+  {% set uh_ref = un.qtd.UH.orc_ref %}
+  {{ m.kpi("UHs vendidas (mês)", k.real.uh|qtd, ("Orçado proporcional " if corr else "Orçado ") ~ uh_ref|qtd, ((k.real.uh or 0) - (uh_ref or 0))|sinal) }}
+  {% if t.investimento %}{{ m.kpi("Investimentos", t.investimento.realizado|brl(0), "Orçado " ~ t.investimento.orc_ref|brl(0) ~ " (fora do custo)") }}{% endif %}
+</section>
+
+<div class="grade-2">
+  <section class="cartao">
+    <h2>Receita e custo operacional por mês, {{ f.ano }}</h2>
+    <div class="grafico"><canvas id="g-mensal" aria-label="Gráfico mensal de receita e custo"></canvas></div>
+    <p class="nota">* mês corrente, ainda parcial. Custo operacional = soma das contas, sem investimentos.</p>
+  </section>
+  <section class="cartao">
+    <h2>Maiores desvios desfavoráveis de custo</h2>
+    <div class="rolagem"><table>
+      <thead><tr><th>Conta</th><th>Grupo</th><th class="num">Impacto</th><th class="num">% acum.</th></tr></thead>
+      <tbody>{% for p in pareto %}<tr><td>{{ p.conta }}</td><td>{{ p.grupo }}</td><td class="num desf">{{ p.impacto|brl(0) }}</td><td class="num">{{ p.acum|pct }}</td></tr>
+      {% else %}<tr><td colspan="4">Nenhuma conta acima do orçamento.</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <p class="nota"><a href="/orcado?unidade={{ f.unidade }}&ano={{ f.ano }}&mes={{ f.mes }}{{ '&modo=acumulado' if f.acumulado }}">Pareto completo e detalhe por conta</a></p>
+  </section>
+</div>
+
+<section class="cartao">
+  <h2>Grupos de custo</h2>
+  <div class="rolagem"><table>
+    {{ m.cab_orc("Grupo", corr and not f.acumulado) }}
+    <tbody>
+    {% for g in t.grupos %}{{ m.linha_orc(g, g.grupo, '', corr and not f.acumulado) }}{% endfor %}
+    {{ m.linha_orc(t.custo_total, "Custo operacional total", 'total', corr and not f.acumulado) }}
+    </tbody>
+  </table></div>
+</section>
+
+{% if alertas %}
+<section class="cartao">
+  <h2>Alertas de qualidade</h2>
+  <div class="rolagem"><table>
+    <thead><tr><th>Unidade</th><th>Checagem</th><th class="num">Esperado</th><th class="num">Atual</th></tr></thead>
+    <tbody>{% for a in alertas %}<tr><td>{{ a.unidade }}</td><td>{{ a.nome }}</td><td class="num">{{ a.esperado }}</td><td class="num desf">{{ a.atual }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+<script>graficoMensal("g-mensal", {{ serie|json }});</script>
+{% endif %}
+{% endblock %}

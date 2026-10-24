@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block status %}{{ m.status(u.status) }}{% endblock %}
+{% block corpo %}
+{% if u.vazio %}<section class="cartao">Sem arquivo para o período selecionado.</section>{% else %}
+{% set q = u.qtd %}
+<section class="kpis">
+  {{ m.kpi("UHs vendidas", q.UH.real|qtd, "Orçado " ~ q.UH.orc|qtd ~ (" · proporcional " ~ q.UH.orc_ref|qtd if u.status.status=='Corrente' else "")) }}
+  {{ m.kpi("PAX (adultos + CHD 1)", q.PAX.real|qtd, "Orçado " ~ q.PAX.orc|qtd) }}
+  {{ m.kpi("PAX total", q.PAX_TOTAL.real|qtd, "Orçado " ~ q.PAX_TOTAL.orc|qtd) }}
+  {{ m.kpi("Custo operacional por UH", u.total_uh.u_real|brl, "Orçado " ~ u.total_uh.u_orc|brl, u.total_uh.dif_unit|sinal) }}
+  {{ m.kpi("Efeito volume", u.total_uh.efeito_volume|brl(0), "Variação de UH × custo orçado/UH") }}
+  {{ m.kpi("Efeito eficiência", u.total_uh.efeito_eficiencia|brl(0), "Variação do custo/UH × UH realizadas") }}
+</section>
+<div class="ressalva">Decomposição gerencial aproximada entre volume e eficiência. Efeito positivo aumenta o custo. Classe E (não conclusivo) quando falta orçamento, realizado ou divisor, ou quando o mês corrente tem lançamento não linear.</div>
+
+<section class="cartao">
+  <h2>Grupos de custo por UH</h2>
+  <div class="rolagem"><table>
+    <thead><tr><th>Grupo</th><th class="num">Orçado/UH</th><th class="num">Realizado/UH</th><th class="num">Dif./UH</th><th class="num">Dif. total</th><th class="num">Efeito volume</th><th class="num">Efeito eficiência</th><th>Classe</th></tr></thead>
+    <tbody>{% for g in u.grupos %}
+      <tr><td>{{ g.grupo }}</td><td class="num">{{ g.u_orc|brl }}</td><td class="num">{{ g.u_real|brl }}</td><td class="num {{ g.dif_unit|sinal }}">{{ g.dif_unit|brl }}</td><td class="num {{ g.dif_total|sinal }}">{{ g.dif_total|brl(0) }}</td><td class="num">{{ g.efeito_volume|brl(0) }}</td><td class="num">{{ g.efeito_eficiencia|brl(0) }}</td><td><span class="selo {{ g.classe }}" title="{{ u.classes[g.classe] }}">{{ g.classe }}</span></td></tr>
+    {% endfor %}
+    <tr class="total"><td>Custo operacional total</td><td class="num">{{ u.total_uh.u_orc|brl }}</td><td class="num">{{ u.total_uh.u_real|brl }}</td><td class="num">{{ u.total_uh.dif_unit|brl }}</td><td class="num">{{ u.total_uh.dif_total|brl(0) }}</td><td class="num">{{ u.total_uh.efeito_volume|brl(0) }}</td><td class="num">{{ u.total_uh.efeito_eficiencia|brl(0) }}</td><td><span class="selo {{ u.total_uh.classe }}">{{ u.total_uh.classe }}</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="cartao">
+  <h2>Contas: economia nominal x eficiência real</h2>
+  <label for="f-classe" class="nota">Filtrar classe
+    <select id="f-classe" onchange="filtrarClasse(this)"><option value="">Todas</option>{% for k, v in u.classes.items() %}<option value="{{ k }}">{{ k }} · {{ v }}</option>{% endfor %}</select></label>
+  <div class="rolagem"><table>
+    <thead><tr><th>Conta</th><th>Grupo</th><th>Divisor</th><th class="num">Orçado ref.</th><th class="num">Realizado</th><th class="num">Dif. total</th><th class="num">Orçado/un.</th><th class="num">Realizado/un.</th><th class="num">Dif./un.</th><th>Classe</th><th>Observação</th></tr></thead>
+    <tbody>{% for c in u.contas %}{% if c.orcado or c.realizado %}
+      <tr data-classe="{{ c.classe }}"><td>{{ c.conta }}</td><td>{{ c.grupo }}</td><td>{{ c.divisor or '–' }}</td>
+      <td class="num">{{ c.orc_ref|brl(0) }}</td><td class="num">{{ c.realizado|brl(0) }}</td><td class="num {{ c.dif_total|sinal }}">{{ c.dif_total|brl(0) }}</td>
+      <td class="num">{{ c.u_orc|brl }}</td><td class="num">{{ c.u_real|brl }}</td><td class="num {{ c.dif_unit|sinal }}">{{ c.dif_unit|brl }}</td>
+      <td><span class="selo {{ c.classe }}" title="{{ u.classes[c.classe] }}">{{ c.classe }}</span></td><td>{{ c.motivo or u.classes[c.classe] }}</td></tr>
+    {% endif %}{% endfor %}</tbody>
+  </table></div>
+  <p class="nota">Divisores: UH = UHs vendidas; PAX = adultos + CHD 1; PAX_TOTAL = adultos + CHD 1 e 2; REFEICAO = refeições implícitas na planilha. Ordenado pelo impacto total em R$.</p>
+</section>
+{% endif %}
+{% endblock %}

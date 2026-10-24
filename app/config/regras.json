@@ -1,0 +1,64 @@
+{
+  "_sobre": "Regras de leitura das planilhas. Editar aqui ao surgir conta, grupo ou unidade nova; o codigo nao precisa mudar.",
+
+  "unidades": {"SAMOA BEACH": "Samoa Beach", "SAMOA VILLA": "Samoa Villa"},
+
+  "meses": {"JAN": 1, "FEV": 2, "MAR": 3, "ABR": 4, "MAI": 5, "JUN": 6,
+            "JUL": 7, "AGO": 8, "SET": 9, "OUT": 10, "NOV": 11, "DEZ": 12},
+
+  "metas": {
+    "inicio_receita": "RECEITA",
+    "inicio_indicadores": "UHS VENDIDAS",
+    "fim_indicadores": "COUVERT MEDIO",
+    "inicio_custos": "CUSTOS",
+    "grupos_receita_prefixos": ["VENDAS ", "RECEITA "],
+    "grupos_receita_exatos": ["EVENTOS"],
+    "grupos_custo": ["PESSOAL", "ALIMENTOS E BEBIDAS", "GOVERNANCA", "EXPERIENCIA LAZER",
+                     "MANUTENCAO", "RECEPCAO", "COMERCIAL", "PORTARIA",
+                     "ADMINISTRATIVO FINANCEIRO", "DIVERSOS"],
+    "investimento": ["INVESTIMENTOS"],
+    "contas_com_setor": ["MAO DE OBRA EXTRA", "RPA"],
+    "setores_moe": ["A B", "ALMOXARIFADO", "ESPORTE E LAZER", "GOVERNANCA", "MANUTENCAO",
+                    "PORTARIA", "RECEPCAO", "REFEITORIO"],
+    "indicadores": {
+      "UHS VENDIDAS": "UH",
+      "NUMERO DE ADULTOS CHD 1": "PAX",
+      "NUMERO DE ADULTOS": "ADULTOS",
+      "DIARIA MEDIA": "DIARIA_MEDIA",
+      "OCUPACAO": "OCUPACAO",
+      "COUVERT MEDIO": "COUVERT",
+      "NUMERO TOTAL DE PAX ADT CHD 1 E 2": "PAX_TOTAL",
+      "CUSTO TOTAL PAX": "CUSTO_PAX",
+      "CUSTO TOTAL UH": "CUSTO_UH",
+      "CMV": "CMV"
+    }
+  },
+
+  "aliases": {
+    "CONSUMO INTENO COMERCIAL": "CONSUMO INTERNO COMERCIAL",
+    "LOCACOES DE RADIOS": "LOCACAO DE RADIOS",
+    "CONSUMO INTERNO LAZER": "CONSUMO INTERNO EXPERIENCIA E LAZER"
+  },
+
+  "diario": {
+    "indicadores_vendas": {"PAX": "PAX", "PAX ADULTOS": "ADULTOS", "PAX CRIANCA 1": "CHD1",
+                           "PAX MAP": "PAX_MAP", "UH OCUPADAS": "UH"},
+    "investimento_custos": ["INVESTIMENTOS", "ATIVO IMOBILIZADO"]
+  },
+
+  "natureza_custo": {
+    "_sobre": "A variavel, B fixo/semifixo, C lancamento concentrado. Conta fora da lista = D indeterminado.",
+    "A": ["CUSTO DE A B", "AMENITIES", "AMENITIES BLOCO 3", "DESCARTAVEIS", "LIMPEZA", "GAS",
+          "REFEITORIO", "CONSUMO INTERNO", "UTENSILIOS"],
+    "B": ["SEGURANCA E VIGILANCIA", "MANUTENCAO SOFTWARE", "TELEFONE INTERNET PONTO", "TV A CABO",
+          "ALUGUEIS IMOVEIS", "LOCACAO DE IMPRESSORAS", "LOCACAO DE RADIOS", "PLANO DE SAUDE",
+          "ASK SUITE", "JARDINAGEM", "DEDETIZACAO ROTA", "LIMPEZA PISCINA"],
+    "C": ["FOLHA DE PAGAMENTO ENCARGOS", "PJ FOLHA", "DISTRIBUICAO PROPRIETARIOS", "IMPOSTOS E TAXAS",
+          "IPTU E TAXAS", "PUBLICIDADE E PROPAGANDA", "COMISSAO DE VENDA", "SERVICOS MANUTENCAO",
+          "ENERGIA ELETRICA", "ASSOCIACOES", "TRANSPORTE DE PESSOAL", "TAXA DE CONDOMINIO",
+          "SERVICOS DIVERSOS", "SERVICOS ESPORTE E LAZER EVENTOS", "TREINAMENTOS",
+          "CLIMA ORGANIZACIONAL RH", "INVESTIMENTOS"]
+  },
+
+  "tolerancias": {"soma": 1.0, "divisor_rel": 0.02, "pareto_corte": 0.8}
+}

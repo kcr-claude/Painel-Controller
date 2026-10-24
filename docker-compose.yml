@@ -1,0 +1,10 @@
+services:
+  controller:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      # usuario:senha separados por virgula; vazio = sem login (somente rede interna)
+      CONTROLLER_USUARIOS: ""
+    volumes:
+      - ./dados:/srv/dados          # banco SQLite persistente
+    restart: unless-stopped

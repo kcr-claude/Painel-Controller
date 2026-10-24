@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block corpo %}
+{% for b in blocos %}
+<section class="cartao">
+  {% set ok = b.checks|selectattr('status','equalto','OK')|list|length %}
+  <h2>{{ b.unidade }} · {{ MESES[f.mes] }}/{{ f.ano }} · {{ ok }} OK, {{ b.checks|length - ok }} ALERTA</h2>
+  {% if not b.checks %}<p>Sem arquivo para o período.</p>{% else %}
+  <div class="rolagem"><table>
+    <thead><tr><th>Checagem</th><th class="num">Esperado</th><th class="num">Atual</th><th>Status</th><th>Racional</th><th>Detalhe</th></tr></thead>
+    <tbody>{% for c in b.checks %}
+      <tr><td>{{ c.nome }}</td>
+      <td class="num">{{ c.esperado }}</td>
+      <td class="num">{{ c.atual }}</td>
+      <td><span class="selo {{ 'cheio-ok' if c.status=='OK' else 'cheio-alerta' }}">{{ c.status }}</span></td>
+      <td>{{ c.racional }}</td>
+      <td>{% if c.detalhe %}<details><summary>{{ c.detalhe|length }} item(ns)</summary><ul>{% for d in c.detalhe %}<li>{{ d }}</li>{% endfor %}</ul></details>{% endif %}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+</section>
+{% endfor %}
+
+<section class="cartao">
+  <h2>Todos os arquivos importados</h2>
+  <div class="rolagem"><table>
+    <thead><tr><th>Unidade</th><th>Período</th><th>Status</th><th class="num">Último dia</th><th class="num">OK</th><th class="num">ALERTA</th></tr></thead>
+    <tbody>{% for g in grade|reverse %}
+      <tr><td>{{ g.unidade }}</td><td><a href="/qualidade?unidade={{ g.unidade }}&ano={{ g.ano }}&mes={{ g.mes }}">{{ MESES_CURTO[g.mes] }}/{{ g.ano }}</a></td><td>{{ g.status }}</td>
+      <td class="num {{ 'desf' if g.status=='Fechado' and g.dia != g.dias }}">{{ g.dia }}/{{ g.dias }}</td><td class="num fav">{{ g.ok }}</td><td class="num {{ 'desf' if g.alerta }}">{{ g.alerta }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}

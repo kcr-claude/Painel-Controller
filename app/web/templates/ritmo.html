@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block status %}{{ m.status(r.status) }}{% endblock %}
+{% block corpo %}
+{% if r.vazio %}<section class="cartao">Sem arquivo para o período selecionado.</section>{% else %}
+{% if not r.corrente %}<div class="ressalva">Este mês está fechado. O ritmo é mais útil no mês corrente; abaixo, o comportamento diário realizado.</div>{% endif %}
+<section class="kpis">
+  {{ m.kpi("Receita acumulada", r.acumulado|brl(0), "Dia " ~ r.status.dia_lancado ~ " de " ~ r.status.dias_mes) }}
+  {{ m.kpi("Orçamento proporcional", r.orc_prop|brl(0), "Orçamento do mês " ~ r.orc_mes|brl(0)) }}
+  {{ m.kpi("Diferença x proporcional", r.dif_prop|brl(0), "Favorável" if r.dif_prop > 0 else "Desfavorável", r.dif_prop|sinal) }}
+  {{ m.kpi("Média diária realizada", r.media_diaria|brl(0), "Últimos 7 dias " ~ r.media_7d|brl(0)) }}
+  {% if r.corrente %}
+  {{ m.kpi("Saldo para o orçamento", r.saldo|brl(0), r.restantes ~ " dias restantes") }}
+  {{ m.kpi("Receita diária necessária", r.necessaria|brl(0), "Índice de ritmo " ~ (r.indice|qtd(2) if r.indice else "–") ~ " · 7 dias " ~ (r.indice_7d|qtd(2) if r.indice_7d else "–"), ((r.indice or 0) - 1)|sinal) }}
+  {% endif %}
+  {{ m.kpi("Custo lançado no mês", r.custo_acum|brl(0), "Aba CUSTOS, inclui investimentos") }}
+  {{ m.kpi("Média sex-dom x seg-qui", r.media_fds|brl(0), "Seg a qui " ~ r.media_util|brl(0)) }}
+</section>
+
+<section class="cartao">
+  <h2>Receita diária</h2>
+  <div class="grafico"><canvas id="g-ritmo" aria-label="Receita diária"></canvas></div>
+  <p class="nota">Ritmo indicativo com base na média simples dos dias lançados. Índice acima de 1: o ritmo atual supera o necessário. Dias após o último lançado aparecem em cinza e não são tratados como zero. Fonte: aba VENDAS (inclui Eventos).</p>
+</section>
+
+{% if r.pendentes %}
+<section class="cartao">
+  <h2>Contas fixas ou de lançamento concentrado ainda sem realizado</h2>
+  <div class="rolagem"><table>
+    <thead><tr><th>Grupo</th><th>Conta</th><th>Natureza</th><th class="num">Orçado do mês</th></tr></thead>
+    <tbody>{% for p in r.pendentes %}<tr><td>{{ p.grupo }}</td><td>{{ p.conta }}</td><td>{{ 'B fixo' if p.natureza=='B' else 'C concentrado' }}</td><td class="num">{{ p.orcado|brl }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="nota">Ausência de lançamento não é economia. Confirmar se o valor ainda será lançado até o fechamento.</p>
+</section>
+{% endif %}
+
+<section class="cartao">
+  <h2>Dia a dia</h2>
+  <div class="rolagem"><table>
+    <thead><tr><th class="num">Dia</th><th>Sem.</th><th class="num">Receita</th><th class="num">Hospedagem</th><th class="num">A&amp;B</th><th class="num">UH</th><th class="num">PAX</th><th class="num">Receita/UH</th><th class="num">Custo lançado</th></tr></thead>
+    <tbody>{% for d in r.dias %}
+      <tr class="{{ '' if d.lancado else 'futuro' }}"><td class="num">{{ d.dia }}</td><td>{{ d.semana }}</td>
+      {% if d.lancado %}<td class="num">{{ d.receita|brl(0) }}</td><td class="num">{{ d.hospedagem|brl(0) }}</td><td class="num">{{ d.ab|brl(0) }}</td><td class="num">{{ d.uh|qtd }}</td><td class="num">{{ d.pax|qtd }}</td><td class="num">{{ d.rec_uh|brl }}</td><td class="num">{{ d.custo|brl(0) }}</td>
+      {% else %}<td colspan="7">ainda não lançado</td>{% endif %}</tr>
+    {% endfor %}</tbody>
+  </table></div>
+</section>
+<script>graficoRitmo("g-ritmo", {{ r.dias|json }}, {{ (r.necessaria or 0)|json }}, {{ (r.media_diaria or 0)|json }});</script>
+{% endif %}
+{% endblock %}

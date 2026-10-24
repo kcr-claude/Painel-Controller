@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block corpo %}
+<section class="cartao">
+  <h2>Nenhuma planilha importada ainda</h2>
+  <p>As telas mostram receitas, custos e indicadores a partir das planilhas mensais "CUSTOS & RECEITAS I GERAL" de cada unidade.</p>
+  <p><a href="/importar">Importe a primeira planilha</a> ou rode a carga em lote: <code>python -m scripts.carregar_pasta &lt;pasta&gt;</code>.</p>
+</section>
+{% endblock %}

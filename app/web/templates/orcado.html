@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "_m.html" as m %}
+{% block status %}{{ m.status(t.status) }}{% endblock %}
+{% block corpo %}
+{% if t.vazio %}<section class="cartao">Sem arquivo para o período selecionado.</section>{% else %}
+{% set corr = t.status.status == 'Corrente' and not f.acumulado %}
+{% if t.status.status == 'Corrente' %}<div class="ressalva">Mês corrente: diferença calculada contra o orçamento proporcional (orçado do mês × {{ t.status.pct|pct }}). Folha, impostos, distribuição a proprietários e serviços podem ser lançados de forma concentrada.</div>{% endif %}
+
+<section class="cartao">
+  <h2>Receitas</h2>
+  <div class="rolagem"><table>
+    {{ m.cab_orc("Grupo de receita", corr) }}
+    <tbody>
+      {% for r in t.receitas %}{{ m.linha_orc(r, r.grupo, '', corr) }}{% endfor %}
+      {{ m.linha_orc(t.receita_total, "Receita total (METAS)", 'total', corr) }}
+    </tbody>
+  </table></div>
+  <p class="nota">Receita: diferença favorável = realizado − orçado. O total segue a linha RECEITA da planilha.</p>
+</section>
+
+<section class="cartao">
+  <h2>Custos por grupo e conta</h2>
+  <div class="rolagem"><table>
+    {{ m.cab_orc("Grupo / conta", corr) }}
+    <tbody>
+    {% for g in t.grupos %}
+      {{ m.linha_orc(g, g.grupo, 'grupo', corr) }}
+      {% for c in g.contas %}{% if c.orcado or c.realizado %}{{ m.linha_orc(c, c.conta, 'conta', corr) }}{% endif %}{% endfor %}
+    {% endfor %}
+    {{ m.linha_orc(t.custo_total, "Custo operacional total", 'total', corr) }}
+    {% if t.investimento %}{{ m.linha_orc(t.investimento, "Investimentos (fora do custo operacional)", 'grupo', corr) }}{% endif %}
+    </tbody>
+  </table></div>
+  <p class="nota">Custo: diferença favorável = orçado − realizado. Grupo = soma das contas (os subtotais da planilha são conferidos em Qualidade dos dados). Saldo positivo de investimento não é economia: pode ser postergação.</p>
+</section>
+
+<section class="cartao">
+  <h2>Pareto dos desvios desfavoráveis de custo</h2>
+  {% if pareto %}
+  <div class="grafico" style="height:320px"><canvas id="g-pareto" aria-label="Gráfico de Pareto"></canvas></div>
+  <div class="rolagem"><table>
+    <thead><tr><th>#</th><th>Conta</th><th>Grupo</th><th>Natureza</th><th class="num">Orçado ref.</th><th class="num">Realizado</th><th class="num">Impacto</th><th class="num">Part.</th><th class="num">Acumulado</th></tr></thead>
+    <tbody>{% for p in pareto %}
+      <tr><td class="num">{{ loop.index }}</td><td>{% if p.pareto %}<b>{{ p.conta }}</b>{% else %}{{ p.conta }}{% endif %}</td><td>{{ p.grupo }}</td><td>{{ p.natureza }}</td>
+      <td class="num">{{ p.orc_ref|brl }}</td><td class="num">{{ p.realizado|brl }}</td><td class="num desf">{{ p.impacto|brl }}</td><td class="num">{{ p.part|pct }}</td><td class="num">{{ p.acum|pct }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  <p class="nota">Em negrito e em vermelho no gráfico: contas que explicam cerca de 80% do impacto desfavorável. Natureza: A variável, B fixo/semifixo, C lançamento concentrado, D indeterminado.</p>
+  <script>graficoPareto("g-pareto", {{ pareto[:20]|json }});</script>
+  {% else %}<p>Nenhuma conta de custo acima do orçamento no período.</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}
